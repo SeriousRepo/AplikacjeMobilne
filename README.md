@@ -15,5 +15,5 @@ $ flask run
 ```
 to end virtualenv session, type
 ```
-deactivate
+$ deactivate
 ```
