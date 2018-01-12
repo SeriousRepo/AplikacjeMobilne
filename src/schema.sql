@@ -1,13 +1,13 @@
 drop table if exists User; 
 create table User (
 	id integer primary key autoincrement,
-    	login varchar(20) not null unique,
+   	login varchar(20) not null unique,
 	password varchar not null,
 	phone_number varchar(9) not null unique,
 	email varchar(20) not null,
-    	name varchar(20), 
-    	surname varchar(20),
-    	birth_date varchar(10),
+   	name varchar(20), 
+   	surname varchar(20),
+   	birth_date varchar(10),
 	sex varchar check(sex in ('M', 'W'))   
 );
 
