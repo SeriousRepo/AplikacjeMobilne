@@ -12,15 +12,14 @@ def users():
 	if request.method == 'GET':	
 		return select_users()
 	if request.method == 'POST' and request.headers['Content-Type'] == 'application/json':
-		response = (insert_user(request)) 
-		return response
+		return insert_user(request)
 
 @app.route('/users/<user_name>', methods=['GET', 'PUT', 'DELETE'])
 def user(user_name):
 	if request.method == 'GET':
 		return select_user(user_name) 
-	if request.method == 'PUT':
-		return edit_user(user_name) 
+	if request.method == 'PUT' and request.headers['Content-Type'] == 'application/json':
+		return update_user(user_name, request) 
 	if request.method == 'DELETE':
 		return delete_user(user_name)
 

@@ -5,8 +5,8 @@ from flask import Response, request
 FILEPATH = "src/database.db"
 
 def convert_to_dict(cur):
-	response = [ dict(line) for line in [ zip([ column[0] for column in cur.description ], row) for row in cur.fetchall() ] ]
-	return response	
+	dictio = [ dict(line) for line in [ zip([ column[0] for column in cur.description ], row) for row in cur.fetchall() ] ]
+	return dictio	
 
 def param_handler(param_dict, param_tuple):
 	product = []
@@ -34,13 +34,13 @@ def insert_user(request):
 	proper_params = param_handler(request_dict, possible_params)
 	with sql.connect(FILEPATH) as con:
 		cur = con.cursor()
-		cur.executemany("INSERT INTO User ({}) VALUES (?,?,?,?,?,?,?,?);".format(', '.join(str(x) for x in possible_params)), (proper_params,))
+		cur.executemany("INSERT INTO User ({}) VALUES (?,?,?,?,?,?,?,?);".format(','.join(str(x) for x in possible_params)), (proper_params,))
 		idx = cur.lastrowid
 		con.commit()
 	data = {'id': idx}
 	data.update(dict(zip(possible_params, proper_params)))
 	resp = Response(json.dumps(data), status=201, mimetype='application/json')
-	resp.headers['Message'] = "User {} was added".format(data['login'])
+	resp.headers['Message'] = "User {} was successfully added".format(data['login'])
 	return resp
 
 def select_user(username):
@@ -51,12 +51,25 @@ def select_user(username):
 	resp = Response(json.dumps(data), status=200, mimetype='application/json')
 	return resp
 
-def update_user(username):
-	return "\n\n\n\n"
+"""def update_user(username, request):
+	request_dict = request.get_json()
+	print(request_dict)
+	values_tuple = [tuple(x) for x in request_dict.values()]
+	print(request_dict['email'])
+	print(values_tuple)
+	with sql.connect(FILEPATH) as con:
+		cur = con.cursor()
+		cur.executemany("UPDATE User SET {} WHERE login=?".format(','.join(str(x)+'=?' for x in request_dict)), (values_tuple, username))
+		data = select_user(username)
+		#resp = Response
+	return "smth" """
 
 def delete_user(username):
 	with sql.connect(FILEPATH) as con:
-                cur = con.cursor()
-                cur.execute("DELETE FROM User WHERE login=?", [username])
-	return "removed\n"
+		cur = con.cursor()
+		cur.execute("DELETE FROM User WHERE EXISTS(SELECT * FROM User WHERE login=?) AND login=?", (username, username))
+		con.commit()
+	resp = Response(status=200, mimetype='application/json')
+	resp.headers['Message'] = "User {} was successfully deleted".format(username) 
+	return resp
 
