@@ -1,6 +1,7 @@
 # Dialer
 
 ## Running server
+make sure you have virtual environment 
 ```
 $ sudo pip install virtualenv
 ```
@@ -12,7 +13,7 @@ $ sudo pip install Flask
 $ export FLASK_APP=run.py
 $ flask run
 ```
-to en virtualenv session type
+to end virtualenv session, type
 ```
 deactivate
 ```
