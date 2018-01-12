@@ -1,4 +1,4 @@
-## Running server(type in command line):
+## Running server:
 
 ```
 export FLASK_APP=run.py
