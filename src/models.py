@@ -17,6 +17,11 @@ def param_handler(param_dict, param_tuple):
 			product.append(None)
 	return tuple(product)
 
+def add_quote_to_str(param):
+	if type(param) is unicode:
+		param = "'" + param + "'"
+	return param
+
 def documentate():
 	return "Here will be documentation ;)\n"
 
@@ -30,17 +35,16 @@ def select_users():
 			
 def insert_user(request):
 	request_dict = request.get_json()
-	possible_params = ('login','password', 'phone_number', 'email', 'name', 'surname', 'birth_date', 'sex')
-	proper_params = param_handler(request_dict, possible_params)
+	params = ','.join("{}".format(x) for x in request_dict)
+	values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
 	with sql.connect(FILEPATH) as con:
 		cur = con.cursor()
-		cur.executemany("INSERT INTO User ({}) VALUES (?,?,?,?,?,?,?,?);".format(','.join(str(x) for x in possible_params)), (proper_params,))
+		cur.execute("INSERT INTO User ({}) VALUES ({});".format(params, values))
 		idx = cur.lastrowid
+		cur.execute("SELECT * FROM User WHERE id=?;", (idx,))
+		data = convert_to_dict(cur)
 		con.commit()
-	data = {'id': idx}
-	data.update(dict(zip(possible_params, proper_params)))
 	resp = Response(json.dumps(data), status=201, mimetype='application/json')
-	resp.headers['Message'] = "User {} was successfully added".format(data['login'])
 	return resp
 
 def select_user(username):
@@ -53,16 +57,17 @@ def select_user(username):
 
 def update_user(username, request):
 	request_dict = request.get_json()
-	values_tuple = tuple(request_dict.values())
-	params = ','.join(str(x)+'=?' for x in request_dict) 
-	query = ("UPDATE User SET {} WHERE login=\"{}\"".format(params, username))
-	print(query)
+	params = ','.join("{}={}".format(x, add_quote_to_str(request_dict[x])) for x in request_dict)
+	query = ("UPDATE User SET {} WHERE login=\'{}\';").format(params, username)
 	with sql.connect(FILEPATH) as con:
 		cur = con.cursor()
+		cur.execute("SELECT id FROM User WHERE login=?", (username,))
+		idx = cur.fetchone()[0]
 		cur.execute(query)
-		#data = select_user(username)
-		#resp = Response
-	return "smth"
+		cur.execute("SELECT * FROM User WHERE id=?", (idx,))
+		data = convert_to_dict(cur)
+	resp = Response(json.dumps(data), status=200, mimetype='application/json')
+	return resp
 
 def delete_user(username):
 	with sql.connect(FILEPATH) as con:
