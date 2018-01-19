@@ -51,18 +51,18 @@ def select_user(username):
 	resp = Response(json.dumps(data), status=200, mimetype='application/json')
 	return resp
 
-"""def update_user(username, request):
+def update_user(username, request):
 	request_dict = request.get_json()
-	print(request_dict)
-	values_tuple = [tuple(x) for x in request_dict.values()]
-	print(request_dict['email'])
-	print(values_tuple)
+	values_tuple = tuple(request_dict.values())
+	params = ','.join(str(x)+'=?' for x in request_dict) 
+	query = ("UPDATE User SET {} WHERE login=\"{}\"".format(params, username))
+	print(query)
 	with sql.connect(FILEPATH) as con:
 		cur = con.cursor()
-		cur.executemany("UPDATE User SET {} WHERE login=?".format(','.join(str(x)+'=?' for x in request_dict)), (values_tuple, username))
-		data = select_user(username)
+		cur.execute(query)
+		#data = select_user(username)
 		#resp = Response
-	return "smth" """
+	return "smth"
 
 def delete_user(username):
 	with sql.connect(FILEPATH) as con:
