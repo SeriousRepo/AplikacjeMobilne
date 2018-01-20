@@ -1,0 +1,3 @@
+#!/bin/bash
+
+curl -X POST -H "Content-Type:application/json" -d '{"user1_id":'${1}', "user2_id":'${2}', "tarrif_id":'${3}', "call_date":"'${4}'", "duration":'${5}', "quality":'${6}'}' http://127.0.0.1:5000/calls

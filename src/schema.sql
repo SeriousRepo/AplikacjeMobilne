@@ -1,3 +1,18 @@
+drop table if exists Operator;
+create table Operator (
+	id integer primary key autoincrement,
+	name varchar(20) not null unique
+);
+
+drop table if exists Tarrif;
+create table Tarrif (
+	id integer primary key autoincrement,
+	operator_id integer not null,
+	name varchar(20) not null unique,
+	cost_per_minute float not null, 
+	FOREIGN KEY(operator_id) REFERENCES Operator(id)
+);
+
 drop table if exists User; 
 create table User (
 	id integer primary key autoincrement,
@@ -23,18 +38,4 @@ create table Call (
 	FOREIGN KEY(user1_id) REFERENCES User(id),
 	FOREIGN KEY(user2_id) REFERENCES User(id),
 	FOREIGN KEY(tarrif_id) REFERENCES Tarrif(id)
-);
-
-drop table if exists Tarrif;
-create table Tarrif (
-	id integer primary key autoincrement,
-	operator_id integer not null,
-	name varchar(20) not null unique,
-	cost_per_minute float not null 
-);
-
-drop table if exists Operator;
-create table Operator (
-	id integer primary key autoincrement,
-	name varchar(20) not null unique
 );

@@ -25,19 +25,37 @@ def user(user_name):
 
 @app.route('/calls', methods=['GET', 'POST'])
 def calls():
-	return 'calls methods\n'
+	if request.method == 'GET':
+		return select_calls()
+	if request.method == 'POST' and request.headers['Content-Type'] == 'application/json':
+		return insert_call(request)
 
 @app.route('/calls/<int:call_id>', methods=['GET', 'PUT', 'DELETE'])
-def call(callId):
-	return 'call methods\n'
+def call(call_id):
+	if request.method == 'GET':
+		return select_call(call_id) 
+	if request.method == 'PUT' and request.headers['Content-Type'] == 'application/json':
+		return update_call(call_id, request) 
+	if request.method == 'DELETE':
+		return delete_call(call_id)
 
 @app.route('/tarrifs', methods=['GET', 'POST'])
 def tarrifs():
-	return 'tarrifs methods\n'
+	if request.method == 'GET':	
+		return select_tarrifs()
+	if request.method == 'POST' and request.headers['Content-Type'] == 'application/json':
+		return insert_tarrif(request)
 
-@app.route('/tarrifs/<int:tarrifId>', methods=['GET', 'PUT', 'DELETE'])
-def tarrif(tarrifId):
-	return 'tarrif methods\n'
+@app.route('/tarrifs/<tarrif_name>', methods=['GET', 'PUT', 'DELETE'])
+def tarrif(tarrif_name):
+	if request.method == 'GET':
+		return select_tarrif(tarrif_name) 
+	if request.method == 'PUT' and request.headers['Content-Type'] == 'application/json':
+		return update_tarrif(tarrif_name, request) 
+	if request.method == 'DELETE':
+		return delete_tarrif(tarrif_name)
+
+	
 
 @app.route('/operators', methods=['GET', 'POST'])
 def operators():
