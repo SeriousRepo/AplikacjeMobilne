@@ -59,8 +59,17 @@ def tarrif(tarrif_name):
 
 @app.route('/operators', methods=['GET', 'POST'])
 def operators():
-	return 'operators methods\n'
+	if request.method == 'GET':	
+		return select_operators()
+	if request.method == 'POST' and request.headers['Content-Type'] == 'application/json':
+		return insert_operator(request)
 
-@app.route('/operators/<int:operatorId>', methods=['GET', 'PUT', 'DELETE'])
-def operator(operatorId):
-	return 'operator methods\n'
+@app.route('/operators/<operator_name>', methods=['GET', 'PUT', 'DELETE'])
+def operator(operator_name):
+	if request.method == 'GET':
+		return select_operator(operator_name) 
+	if request.method == 'PUT' and request.headers['Content-Type'] == 'application/json':
+		return update_operator(operator_name, request) 
+	if request.method == 'DELETE':
+		return delete_operator(operator_name)
+	

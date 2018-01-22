@@ -184,3 +184,56 @@ def delete_tarrif(tarrif_name):
 	resp.headers['Message'] = "User {} was successfully deleted".format(tarrif_name) 
 	return resp
 
+def select_operators():
+	with sql.connect(FILEPATH) as con:
+		cur = con.cursor()
+		cur.execute("SELECT * FROM Operator")
+		data = convert_to_dict(cur)
+	resp = Response(json.dumps(data), status=200, mimetype='application/json')
+	return resp
+
+def insert_operator(request):
+	request_dict = request.get_json()
+	params = ','.join("{}".format(x) for x in request_dict)
+	values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
+	with sql.connect(FILEPATH) as con:
+		cur = con.cursor()
+		cur.execute("INSERT INTO Operator ({}) VALUES ({});".format(params, values))
+		idx = cur.lastrowid
+		cur.execute("SELECT * FROM Operator WHERE id=?;", (idx,))
+		data = convert_to_dict(cur)
+		con.commit()
+	resp = Response(json.dumps(data), status=201, mimetype='application/json')
+	return resp
+
+def select_operator(operator_name):
+	with sql.connect(FILEPATH) as con:
+		cur = con.cursor()
+		cur.execute("SELECT * FROM Operator WHERE name=?", (operator_name,))
+		data = convert_to_dict(cur)
+	resp = Response(json.dumps(data), status=200, mimetype='application/json')
+	return resp
+
+def update_operator(operator_name, request):
+	request_dict = request.get_json()
+	params = ','.join("{}={}".format(x, add_quote_to_str(request_dict[x])) for x in request_dict)
+	query = ("UPDATE Operator SET {} WHERE name='{}';").format(params, operator_name)
+	with sql.connect(FILEPATH) as con:
+		cur = con.cursor()
+		cur.execute("SELECT id FROM Operator WHERE name=?", (operator_name,))
+		idx = cur.fetchone()[0]
+		cur.execute(query)
+		cur.execute("SELECT * FROM Operator WHERE id=?", (idx,))
+		data = convert_to_dict(cur)
+	resp = Response(json.dumps(data), status=200, mimetype='application/json')
+	return resp
+
+def delete_operator(operator_name):
+	with sql.connect(FILEPATH) as con:
+		cur = con.cursor()
+		cur.execute("DELETE FROM Operator WHERE name=?", (operator_name,))
+		con.commit()
+	resp = Response(status=200, mimetype='application/json')
+	resp.headers['Message'] = "User {} was successfully deleted".format(operator_name) 
+	return resp
+
