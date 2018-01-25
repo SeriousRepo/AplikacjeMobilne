@@ -1,6 +1,7 @@
 import sqlite3 as sql
 import json
 from flask import Response, request
+import werkzeug.exceptions
 
 FILEPATH = "src/database.db"
 
@@ -39,7 +40,10 @@ def insert_user(request):
 	values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
 	with sql.connect(FILEPATH) as con:
 		cur = con.cursor()
-		cur.execute("INSERT INTO User ({}) VALUES ({});".format(params, values))
+		try:
+			cur.execute("INSERT INTO User ({}) VALUES ({});".format(params, values))
+		except Exception as e:
+			raise str("chuj")
 		idx = cur.lastrowid
 		cur.execute("SELECT * FROM User WHERE id=?;", (idx,))
 		data = convert_to_dict(cur)
