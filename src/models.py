@@ -1,9 +1,8 @@
 import sqlite3 as sql
 import json
-from flask import Response, request
-import werkzeug.exceptions
+from flask import Response, request, jsonify
+from werkzeug.exceptions import HTTPException
 
-FILEPATH = "src/database.db"
 
 def convert_to_dict(cur):
 	dictio = [ dict(line) for line in [ zip([ column[0] for column in cur.description ], row) for row in cur.fetchall() ] ]
@@ -27,7 +26,7 @@ def documentate():
 	return "Here will be documentation ;)\n"
 
 def select_users():
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT * FROM User")
 		data = convert_to_dict(cur)
@@ -38,12 +37,12 @@ def insert_user(request):
 	request_dict = request.get_json()
 	params = ','.join("{}".format(x) for x in request_dict)
 	values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		try:
 			cur.execute("INSERT INTO User ({}) VALUES ({});".format(params, values))
-		except Exception as e:
-			raise str("chuj")
+		except sql.IntegrityError as e:
+			return json.dumps({"message": str(e)})	
 		idx = cur.lastrowid
 		cur.execute("SELECT * FROM User WHERE id=?;", (idx,))
 		data = convert_to_dict(cur)
@@ -52,7 +51,7 @@ def insert_user(request):
 	return resp
 
 def select_user(username):
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT * FROM User WHERE login=?", (username,))
 		data = convert_to_dict(cur)
@@ -63,9 +62,12 @@ def update_user(username, request):
 	request_dict = request.get_json()
 	params = ','.join("{}={}".format(x, add_quote_to_str(request_dict[x])) for x in request_dict)
 	query = ("UPDATE User SET {} WHERE login='{}';").format(params, username)
-	with sql.connect(FILEPATH) as con:
+	with conenct_db() as con:
 		cur = con.cursor()
-		cur.execute("SELECT id FROM User WHERE login=?", (username,))
+		try:
+			cur.execute("SELECT id FROM User WHERE login=?", (username,))
+		except: 
+			raise BadRequest()
 		idx = cur.fetchone()[0]
 		cur.execute(query)
 		cur.execute("SELECT * FROM User WHERE id=?", (idx,))
@@ -74,7 +76,7 @@ def update_user(username, request):
 	return resp
 
 def delete_user(username):
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("DELETE FROM User WHERE login=?", (username,))
 		con.commit()
@@ -83,7 +85,7 @@ def delete_user(username):
 	return resp
 
 def select_calls():
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT * FROM Call")
 		data = convert_to_dict(cur)
@@ -94,7 +96,7 @@ def insert_call(request):
 	request_dict = request.get_json()
 	params = ','.join("{}".format(x) for x in request_dict)
 	values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("INSERT INTO Call ({}) VALUES ({});".format(params, values))
 		idx = cur.lastrowid
@@ -105,7 +107,7 @@ def insert_call(request):
 	return resp
 
 def select_call(call_id):
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT * FROM Call WHERE id=?", (call_id,))
 		data = convert_to_dict(cur)
@@ -116,7 +118,7 @@ def update_call(call_id, request):
 	request_dict = request.get_json()
 	params = ','.join("{}={}".format(x, add_quote_to_str(request_dict[x])) for x in request_dict)
 	query = ("UPDATE Call SET {} WHERE id='{}';").format(params, call_id)
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT id FROM Call WHERE id=?", (call_id,))
 		idx = cur.fetchone()[0]
@@ -127,7 +129,7 @@ def update_call(call_id, request):
 	return resp
 
 def delete_call(call_id):
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("DELETE FROM Call WHERE id=?", (call_id,))
 		con.commit()
@@ -136,7 +138,7 @@ def delete_call(call_id):
 	return resp
 
 def select_tarrifs():
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT * FROM Tarrif")
 		data = convert_to_dict(cur)
@@ -147,7 +149,7 @@ def insert_tarrif(request):
 	request_dict = request.get_json()
 	params = ','.join("{}".format(x) for x in request_dict)
 	values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("INSERT INTO Tarrif ({}) VALUES ({});".format(params, values))
 		idx = cur.lastrowid
@@ -158,7 +160,7 @@ def insert_tarrif(request):
 	return resp
 
 def select_tarrif(tarrif_name):
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT * FROM Tarrif WHERE name=?", (tarrif_name,))
 		data = convert_to_dict(cur)
@@ -169,7 +171,7 @@ def update_tarrif(tarrif_name, request):
 	request_dict = request.get_json()
 	params = ','.join("{}={}".format(x, add_quote_to_str(request_dict[x])) for x in request_dict)
 	query = ("UPDATE Tarrif SET {} WHERE name='{}';").format(params, tarrif_name)
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT id FROM Tarrif WHERE name=?", (tarrif_name,))
 		idx = cur.fetchone()[0]
@@ -180,7 +182,7 @@ def update_tarrif(tarrif_name, request):
 	return resp
 
 def delete_tarrif(tarrif_name):
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("DELETE FROM Tarrif WHERE name=?", (tarrif_name,))
 		con.commit()
@@ -189,7 +191,7 @@ def delete_tarrif(tarrif_name):
 	return resp
 
 def select_operators():
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT * FROM Operator")
 		data = convert_to_dict(cur)
@@ -200,7 +202,7 @@ def insert_operator(request):
 	request_dict = request.get_json()
 	params = ','.join("{}".format(x) for x in request_dict)
 	values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("INSERT INTO Operator ({}) VALUES ({});".format(params, values))
 		idx = cur.lastrowid
@@ -211,7 +213,7 @@ def insert_operator(request):
 	return resp
 
 def select_operator(operator_name):
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT * FROM Operator WHERE name=?", (operator_name,))
 		data = convert_to_dict(cur)
@@ -222,7 +224,7 @@ def update_operator(operator_name, request):
 	request_dict = request.get_json()
 	params = ','.join("{}={}".format(x, add_quote_to_str(request_dict[x])) for x in request_dict)
 	query = ("UPDATE Operator SET {} WHERE name='{}';").format(params, operator_name)
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("SELECT id FROM Operator WHERE name=?", (operator_name,))
 		idx = cur.fetchone()[0]
@@ -233,7 +235,7 @@ def update_operator(operator_name, request):
 	return resp
 
 def delete_operator(operator_name):
-	with sql.connect(FILEPATH) as con:
+	with connect_db() as con:
 		cur = con.cursor()
 		cur.execute("DELETE FROM Operator WHERE name=?", (operator_name,))
 		con.commit()
