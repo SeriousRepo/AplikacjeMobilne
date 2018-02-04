@@ -9,7 +9,7 @@ get into main application directory, then type
 ```
 $ python3 -m virtualenv env
 $ source env/bin/activate
-$ sudo pip3 install Flask
+$ sudo pip install Flask
 ```
 
 to end virtualenv session, type
