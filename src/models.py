@@ -1,75 +1,95 @@
-import sqlite3 as sql
-import json
-from flask import Response, request
+from flask import Flask, request
+from src.Connector import Connector
+import os
 
-FILEPATH = "src/database.db"
+app = Flask(__name__)
 
-def convert_to_dict(cur):
-	dictio = [ dict(line) for line in [ zip([ column[0] for column in cur.description ], row) for row in cur.fetchall() ] ]
-	return dictio	
+app.config.from_object(__name__)
 
-def param_handler(param_dict, param_tuple):
-	product = []
-	for param in param_tuple:
-		if param in param_dict:
-			product.append(param_dict[param])
-		else:
-			product.append(None)
-	return tuple(product)
+app.config.update(dict(
+    DATABASE=os.path.join(app.root_path, 'database.db'),
+    SECRET_KEY='development key',
+    USERNAME='admin',
+    PASSWORD='default'
+))
+app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
-def documentate():
-	return "Here will be documentation ;)\n"
 
-def select_users():
-	with sql.connect(FILEPATH) as con:
-		cur = con.cursor()
-		cur.execute("SELECT * FROM User")
-		data = convert_to_dict(cur)
-	resp = Response(json.dumps(data), status=200, mimetype='application/json')
-	return resp
-			
-def insert_user(request):
-	request_dict = request.get_json()
-	possible_params = ('login','password', 'phone_number', 'email', 'name', 'surname', 'birth_date', 'sex')
-	proper_params = param_handler(request_dict, possible_params)
-	with sql.connect(FILEPATH) as con:
-		cur = con.cursor()
-		cur.executemany("INSERT INTO User ({}) VALUES (?,?,?,?,?,?,?,?);".format(','.join(str(x) for x in possible_params)), (proper_params,))
-		idx = cur.lastrowid
-		con.commit()
-	data = {'id': idx}
-	data.update(dict(zip(possible_params, proper_params)))
-	resp = Response(json.dumps(data), status=201, mimetype='application/json')
-	resp.headers['Message'] = "User {} was successfully added".format(data['login'])
-	return resp
+connector = Connector(app)
 
-def select_user(username):
-	with sql.connect(FILEPATH) as con:
-		cur = con.cursor()
-		cur.execute("SELECT * FROM User WHERE login=?", (username,))
-		data = convert_to_dict(cur)
-	resp = Response(json.dumps(data), status=200, mimetype='application/json')
-	return resp
 
-"""def update_user(username, request):
-	request_dict = request.get_json()
-	print(request_dict)
-	values_tuple = [tuple(x) for x in request_dict.values()]
-	print(request_dict['email'])
-	print(values_tuple)
-	with sql.connect(FILEPATH) as con:
-		cur = con.cursor()
-		cur.executemany("UPDATE User SET {} WHERE login=?".format(','.join(str(x)+'=?' for x in request_dict)), (values_tuple, username))
-		data = select_user(username)
-		#resp = Response
-	return "smth" """
+@app.route('/')
+def index():
+    return connector.documentate()
 
-def delete_user(username):
-	with sql.connect(FILEPATH) as con:
-		cur = con.cursor()
-		cur.execute("DELETE FROM User WHERE EXISTS(SELECT * FROM User WHERE login=?) AND login=?", (username, username))
-		con.commit()
-	resp = Response(status=200, mimetype='application/json')
-	resp.headers['Message'] = "User {} was successfully deleted".format(username) 
-	return resp
 
+@app.route('/users', methods=['GET', 'POST'])
+def users():
+    if request.method == 'GET':
+        return connector.select_users()
+    if request.method == 'POST' and request.headers['Content-Type'] == 'application/json':
+        return connector.insert_user(request)
+
+
+@app.route('/users/<user_name>', methods=['GET', 'PUT', 'DELETE'])
+def user(user_name):
+    if request.method == 'GET':
+        return connector.select_user(user_name)
+    if request.method == 'PUT' and request.headers['Content-Type'] == 'application/json':
+        return connector.update_user(user_name, request)
+    if request.method == 'DELETE':
+        return connector.delete_user(user_name)
+
+
+@app.route('/calls', methods=['GET', 'POST'])
+def calls():
+    if request.method == 'GET':
+        return connector.select_calls()
+    if request.method == 'POST' and request.headers['Content-Type'] == 'application/json':
+        return connector.insert_call(request)
+
+
+@app.route('/calls/<int:call_id>', methods=['GET', 'PUT', 'DELETE'])
+def call(call_id):
+    if request.method == 'GET':
+        return connector.select_call(call_id)
+    if request.method == 'PUT' and request.headers['Content-Type'] == 'application/json':
+        return connector.update_call(call_id, request)
+    if request.method == 'DELETE':
+        return connector.delete_call(call_id)
+
+
+@app.route('/tarrifs', methods=['GET', 'POST'])
+def tarrifs():
+    if request.method == 'GET':
+        return connector.select_tarrifs()
+    if request.method == 'POST' and request.headers['Content-Type'] == 'application/json':
+        return connector.insert_tarrif(request)
+
+
+@app.route('/tarrifs/<tarrif_name>', methods=['GET', 'PUT', 'DELETE'])
+def tarrif(tarrif_name):
+    if request.method == 'GET':
+        return connector.select_tarrif(tarrif_name)
+    if request.method == 'PUT' and request.headers['Content-Type'] == 'application/json':
+        return connector.update_tarrif(tarrif_name, request)
+    if request.method == 'DELETE':
+        return connector.delete_tarrif(tarrif_name)
+
+
+@app.route('/operators', methods=['GET', 'POST'])
+def operators():
+    if request.method == 'GET':
+        return connector.select_operators()
+    if request.method == 'POST' and request.headers['Content-Type'] == 'application/json':
+        return connector.insert_operator(request)
+
+
+@app.route('/operators/<operator_name>', methods=['GET', 'PUT', 'DELETE'])
+def operator(operator_name):
+    if request.method == 'GET':
+        return connector.select_operator(operator_name)
+    if request.method == 'PUT' and request.headers['Content-Type'] == 'application/json':
+        return connector.update_operator(operator_name, request)
+    if request.method == 'DELETE':
+        return connector.delete_operator(operator_name)
