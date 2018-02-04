@@ -3,9 +3,8 @@ import unittest
 import tempfile
 import json
 
-from src.utils import app
+from src.models import app
 from src.Connector import Connector
-
 
 class ApiTestCase(unittest.TestCase):
 

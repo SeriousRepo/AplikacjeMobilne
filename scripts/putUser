@@ -1,3 +1,0 @@
-#!/bin/bash
-
-curl -X PUT -H "Content-Type:application/json" -d '{"email":"'${2}'", "phone_number":'${3}'}' 'http://127.0.0.1:5000/users/'${1}

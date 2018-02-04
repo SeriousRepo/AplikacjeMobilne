@@ -131,7 +131,3 @@ class OperatorTestCase(ApiTestCase):
         self.app.delete('/operators/not_existing_operator')
         resp = self.app.get('/operators')
         self.assertEqual(len(json.loads(resp.data)), 1)
-
-
-if __name__ == '__main__':
-    unittest.main()

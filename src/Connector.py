@@ -1,6 +1,6 @@
 import sqlite3
 from flask import g, Response
-from src.models import convert_to_dict, add_quote_to_str
+from src.utils import convert_to_dict, add_quote_to_str
 import json
 
 

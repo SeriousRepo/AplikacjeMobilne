@@ -131,7 +131,3 @@ class TarrifTestCase(ApiTestCase):
         self.app.delete('/tarrifs/not_existing_tarrif')
         resp = self.app.get('/tarrifs')
         self.assertEqual(len(json.loads(resp.data)), 1)
-
-
-if __name__ == '__main__':
-    unittest.main()

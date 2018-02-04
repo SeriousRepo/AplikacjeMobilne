@@ -154,7 +154,3 @@ class CallTestCase(ApiTestCase):
         self.send_request(self.app.post, 'calls', self.call1)
         resp = self.app.delete('/calls/not_existing_call')
         self.assertEqual('404 NOT FOUND', resp.status)
-
-
-if __name__ == '__main__':
-    unittest.main()

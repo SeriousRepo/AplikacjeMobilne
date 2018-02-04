@@ -173,7 +173,3 @@ class UserTestCase(ApiTestCase):
         self.app.delete('/users/not_existing_user')
         resp = self.app.get('/users')
         self.assertEqual(len(json.loads(resp.data)), 1)
-
-
-if __name__ == '__main__':
-    unittest.main()
