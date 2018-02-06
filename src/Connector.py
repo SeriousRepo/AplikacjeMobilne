@@ -1,7 +1,8 @@
 import sqlite3
 from flask import g, Response
-from src.utils import convert_to_dict, add_quote_to_str
+from src.utils import convert_to_dict, add_quote_to_str, User
 import json
+import flask_login
 
 
 class Connector:
@@ -314,3 +315,26 @@ class Connector:
             data = '"message": "{}"'.format(e.args[0])
             resp = Response(data, status=400, mimetype='application/json')
         return resp
+
+    def login(self, request, users_data):
+        login = request.get_json()['login']
+        if request.get_json['password'] != users_data[login]['password']:
+            user = User()
+            user.id = login
+            flask_login.login_user(user)
+            data = '"message": "Logged in as user: {}"'.format(login)
+            status = 200
+        else:
+            data = '"message": "Wrong data"'
+            status = 401
+        return Response(data, status=status, mimetype='application/json')
+
+    def get_users(self):
+        try:
+            with self.connect_db() as con:
+                cur = con.cursor()
+                cur.execute("SELECT * FROM User")
+                data = convert_to_dict(cur)
+            return data
+        except Exception as e:
+            return {}
