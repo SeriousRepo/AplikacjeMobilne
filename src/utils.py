@@ -10,8 +10,3 @@ def add_quote_to_str(param):
     if type(param) is str:
         param = "'" + param + "'"
     return param
-
-
-class User(flask_login.UserMixin):
-    pass
-
