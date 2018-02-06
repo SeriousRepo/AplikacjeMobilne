@@ -40,7 +40,11 @@ class Connector:
         return resp
 
     def insert_user(self, request):
+        resp = self.check_secret_token(request)
+        if resp != None:
+            return resp
         request_dict = request.get_json()
+        del request_dict['secret']
         params = ','.join("{}".format(x) for x in request_dict)
         values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
         try:
@@ -71,6 +75,15 @@ class Connector:
 
     def update_user(self, username, request):
         request_dict = request.get_json()
+        if self.login(request) != None:
+            if self.check_secret_token(request) != None:
+                return Response('{"message": "Not autorized"}', status=401, mimetype='application/error')
+        if 'last_login' in request_dict:
+            del request_dict['last_login']
+        if 'last_password' in request_dict:
+            del request_dict['last_password']
+        if 'secret' in request_dict:
+            del request_dict['secret']
         params = ','.join("{}={}".format(x, add_quote_to_str(request_dict[x])) for x in request_dict)
         query = ("UPDATE User SET {} WHERE login='{}';").format(params, username)
         try:
@@ -87,7 +100,9 @@ class Connector:
             resp = Response(data, status=400, mimetype='application/json')
         return resp
 
-    def delete_user(self, username):
+    def delete_user(self, username, token):
+        if token != 'SecretToken':
+            return Response('{"message": You need to provide secret token for this functionality"}', status=401, mimetype='application/json')
         try:
             with self.connect_db() as con:
                 cur = con.cursor()
@@ -112,7 +127,11 @@ class Connector:
         return resp
 
     def insert_call(self, request):
+        resp = self.check_secret_token(request)
+        if resp != None:
+            return resp
         request_dict = request.get_json()
+        del request_dict['secret']
         params = ','.join("{}".format(x) for x in request_dict)
         values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
         try:
@@ -142,7 +161,11 @@ class Connector:
         return resp
 
     def update_call(self, call_id, request):
+        resp = self.check_secret_token(request)
+        if resp != None:
+            return resp
         request_dict = request.get_json()
+        del request_dict['secret']
         params = ','.join("{}={}".format(x, add_quote_to_str(request_dict[x])) for x in request_dict)
         query = ("UPDATE Call SET {} WHERE id='{}';").format(params, call_id)
         try:
@@ -159,7 +182,9 @@ class Connector:
             resp = Response(data, status=400, mimetype='application/json')
         return resp
 
-    def delete_call(self, call_id):
+    def delete_call(self, call_id, token):
+        if token != 'SecretToken':
+            return Response('{"message": You need to provide secret token for this functionality"}', status=401, mimetype='application/json')
         try:
             with self.connect_db() as con:
                 cur = con.cursor()
@@ -184,7 +209,11 @@ class Connector:
         return resp
 
     def insert_tarrif(self, request):
+        resp = self.check_secret_token(request)
+        if resp != None:
+            return resp
         request_dict = request.get_json()
+        del request_dict['secret']
         params = ','.join("{}".format(x) for x in request_dict)
         values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
         try:
@@ -214,7 +243,11 @@ class Connector:
         return resp
 
     def update_tarrif(self, tarrif_name, request):
+        resp = self.check_secret_token(request)
+        if resp != None:
+            return resp
         request_dict = request.get_json()
+        del request_dict['secret']
         params = ','.join("{}={}".format(x, add_quote_to_str(request_dict[x])) for x in request_dict)
         query = ("UPDATE Tarrif SET {} WHERE name='{}';").format(params, tarrif_name)
         try:
@@ -231,7 +264,9 @@ class Connector:
             resp = Response(data, status=400, mimetype='application/json')
         return resp
 
-    def delete_tarrif(self, tarrif_name):
+    def delete_tarrif(self, tarrif_name, token):
+        if token != 'SecretToken':
+            return Response('{"message": You need to provide secret token for this functionality"}', status=401, mimetype='application/json')
         try:
             with self.connect_db() as con:
                 cur = con.cursor()
@@ -256,7 +291,11 @@ class Connector:
         return resp
 
     def insert_operator(self, request):
+        resp = self.check_secret_token(request)
+        if resp != None:
+            return resp
         request_dict = request.get_json()
+        del request_dict['secret']
         params = ','.join("{}".format(x) for x in request_dict)
         values = ','.join("{}".format(add_quote_to_str(request_dict[x])) for x in request_dict)
         try:
@@ -286,7 +325,11 @@ class Connector:
         return resp
 
     def update_operator(self, operator_name, request):
+        resp = self.check_secret_token(request)
+        if resp != None:
+            return resp
         request_dict = request.get_json()
+        del request_dict['secret']
         params = ','.join("{}={}".format(x, add_quote_to_str(request_dict[x])) for x in request_dict)
         query = ("UPDATE Operator SET {} WHERE name='{}';").format(params, operator_name)
         try:
@@ -303,7 +346,9 @@ class Connector:
             resp = Response(data, status=400, mimetype='application/json')
         return resp
 
-    def delete_operator(self, operator_name):
+    def delete_operator(self, operator_name, token):
+        if token != 'SecretToken':
+            return Response('{"message": You need to provide secret token for this functionality"}', status=401, mimetype='application/json')
         try:
             with self.connect_db() as con:
                 cur = con.cursor()
@@ -314,3 +359,42 @@ class Connector:
             data = '"message": "{}"'.format(e.args[0])
             resp = Response(data, status=400, mimetype='application/json')
         return resp
+
+    def login(self, request):
+        request_dict = request.get_json()
+        if 'last_login' not in request_dict or 'last_password' not in request_dict:
+            data = '{"message": "you need to provide login with password or secret token"}'
+            return Response(data, status=401, mimetype='application/json')
+        given_login = request_dict['last_login']
+        given_password = request_dict['last_password']
+        users_data = self.get_users()
+        single_user = None
+        for usr in users_data:
+            if given_login in usr['login']:
+                single_user = usr
+        if single_user == None:
+            data = '{"message": "Wrong username"}'
+            return Response(data, status=401, mimetype='application/json')
+        if given_password == single_user['password']:
+            return None
+        else:
+            data = '{"message": "Wrong password"}'
+            status = 401
+            return Response(data, status=status, mimetype='application/json')
+
+    def get_users(self):
+        try:
+            with self.connect_db() as con:
+                cur = con.cursor()
+                cur.execute("SELECT * FROM User")
+                data = convert_to_dict(cur)
+            return data
+        except Exception as e:
+            return
+
+    def check_secret_token(self, request):
+        data = request.get_json()
+        if 'secret' in data:
+            if data['secret'] == 'SecretToken':
+                return None
+        return Response('{"message": You need to provide secret token for this functionality"}', status=401, mimetype='application/json')
