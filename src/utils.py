@@ -1,4 +1,3 @@
-import flask_login
 
 def convert_to_dict(cur):
     dictio = [dict(line) for line in

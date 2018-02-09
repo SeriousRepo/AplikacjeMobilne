@@ -1,4 +1,3 @@
-import flask_login
 from flask import Flask, request, json
 from src.Connector import Connector
 import os
@@ -17,8 +16,7 @@ app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 app.secret_key = 'very ultra secret key'
 
 
-login_manager = flask_login.LoginManager()
-login_manager.init_app(app)
+
 connector = Connector(app)
 
 
